@@ -27,13 +27,13 @@ monitors:
   - id: news-ptu-edu-cn
     name: News
     description: 'News Server'
-    url: 'https://www.cloudflare.com/'
+    url: 'https://news.ptu.edu.cn/'
     method: HEAD
     expectStatus: 200
     linkable: true # allows the title to be a link, default=true
 
   - id: oss-ptu-edu-cn
-    name: OSSO
+    name: OSS
     url: 'http://oss.ptu.edu.cn/'
     method: HEAD
     expectStatus: 200
