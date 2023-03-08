@@ -1,8 +1,8 @@
 settings:
   title: 'PTU Status Page'
-  url: 'https://status-page.eidam.dev' # used for Slack messages
+  url: '' # used for Slack messages
   logo: logo-192x192.png # image in ./public/ folder
-  daysInHistogram: 90 # number of days you want to display in histogram
+  daysInHistogram: 30 # number of days you want to display in histogram
   collectResponseTimes: true # collects avg response times from CRON locations
 
   allmonitorsOperational: 'All Systems Operational'
@@ -17,8 +17,8 @@ settings:
 monitors:
   - id: www-ptu-edu-cn # unique identifier
     name: WWW
-    description: 'You write code. They handle the rest.' # default=empty
-    url: 'https://www.ptu.edu.cn/' # URL to fetch
+    description: 'Main Sites' # default=empty
+    url: 'https://www.ptu.edu.cn/index.htm' # URL to fetch
     method: HEAD # default=GET
     expectStatus: 200 # operational status, default=200
     followRedirect: false # should fetch follow redirects, default=false
@@ -26,7 +26,7 @@ monitors:
 
   - id: news-ptu-edu-cn
     name: News
-    description: 'News Server'
+    description: 'Putian University News'
     url: 'https://news.ptu.edu.cn/'
     method: HEAD
     expectStatus: 200
@@ -34,6 +34,24 @@ monitors:
 
   - id: oss-ptu-edu-cn
     name: OSS
+    description: 'One-stop service platform'
     url: 'http://oss.ptu.edu.cn/'
     method: HEAD
     expectStatus: 200
+    linkable: true # allows the title to be a link, default=true
+
+  - id: mail-ptu-edu-cn
+    name: Mail
+    description: 'Mail Server'
+    url: 'https://mail.ptu.edu.cn/'
+    method: HEAD
+    expectStatus: 200
+    linkable: true # allows the title to be a link, default=true
+
+  - id: pay-ptu-edu-cn
+    name: Pay
+    description: 'Payment platform'
+    url: 'http://oss.ptu.edu.cn/'
+    method: HEAD
+    expectStatus: 200
+    linkable: true # allows the title to be a link, default=true
