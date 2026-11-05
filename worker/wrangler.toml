@@ -1,0 +1,21 @@
+name = "uptimeflare-preview-worker"
+main = "src/index.ts"
+workers_dev = true
+compatibility_date = "2025-04-02"
+compatibility_flags = ["nodejs_compat"]
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[[d1_databases]]
+binding = "UPTIMEFLARE_D1"
+database_name = "uptimeflare_preview_d1"
+database_id = "d5b7ae11-25d2-4dd6-ba2e-1c06ad3806ed"
+
+[[durable_objects.bindings]]
+name = "REMOTE_CHECKER_DO"
+class_name = "RemoteChecker"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["RemoteChecker"]

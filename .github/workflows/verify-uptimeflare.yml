@@ -1,0 +1,44 @@
+name: Validate UptimeFlare migration (no deploy)
+on:
+  push:
+    branches:
+      - migration/uptimeflare-preview
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install UI dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Install Worker dependencies
+        run: npm ci --prefix worker --no-audit --no-fund
+      - name: Audit production npm dependencies (non-blocking report)
+        run: |
+          for directory in . worker; do
+            echo "AUDIT_START=$directory"
+            (cd "$directory" && npm audit --omit=dev --json > /tmp/uptimeflare-audit.json) || true
+            node -e '
+              const fs = require("fs");
+              const report = JSON.parse(fs.readFileSync("/tmp/uptimeflare-audit.json", "utf8"));
+              const vulnerabilities = report.vulnerabilities || {};
+              console.log("AUDIT_COUNTS=" + JSON.stringify(report.metadata?.vulnerabilities || {}));
+              for (const [name, v] of Object.entries(vulnerabilities)) {
+                console.log("AUDIT_PACKAGE=" + JSON.stringify({name, severity:v.severity, isDirect:v.isDirect, range:v.range, fixAvailable:v.fixAvailable, via:v.via?.filter(x=>typeof x!=="string").map(x=>({name:x.name,title:x.title,url:x.url})).slice(0,3)}));
+              }
+            '
+            echo "AUDIT_END=$directory"
+          done
+      - name: Build Next.js UI
+        run: npm run build
+      - name: Build Cloudflare Pages output (no upload)
+        run: npx @cloudflare/next-on-pages
+      - name: Bundle Worker (no upload)
+        run: cd worker && npx wrangler deploy src/index.ts --outdir dist --dry-run
