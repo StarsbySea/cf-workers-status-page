@@ -24,6 +24,21 @@ jobs:
       - name: Inspect non-interactive migration options (no changes)
         run: npx --yes vinext@latest init --help
 
+      - name: Upgrade legacy framework dependencies in temporary runner
+        run: |
+          node <<'NODE'
+          const fs = require('fs')
+          const p = JSON.parse(fs.readFileSync('package.json', 'utf8'))
+          p.dependencies.next = '^16.4.5'
+          p.dependencies.react = '^19.3.1'
+          p.dependencies['react-dom'] = '^19.3.1'
+          p.devDependencies['@types/react'] = '^19'
+          p.devDependencies['@types/react-dom'] = '^19'
+          delete p.devDependencies['@cloudflare/next-on-pages']
+          delete p.devDependencies['eslint-config-next']
+          fs.writeFileSync('package.json', JSON.stringify(p, null, 2) + '\n')
+          NODE
+          npm install --no-audit --no-fund
       - name: Initialize vinext on temporary runner (not committed)
         env:
           CI: 'true'
