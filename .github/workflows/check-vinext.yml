@@ -27,7 +27,9 @@ jobs:
       - name: Initialize vinext on temporary runner (not committed)
         env:
           CI: 'true'
-        run: npx --yes vinext@latest init --platform=cloudflare --legacy-wrangler-cloudflare-init --name=uptimeflare-vinext-preview --cdn-cache=none
+        run: |
+          mv wrangler.toml /tmp/uptimeflare-old-pages-wrangler.toml
+          npx --yes vinext@latest init --platform=cloudflare --legacy-wrangler-cloudflare-init --name=uptimeflare-vinext-preview --cdn-cache=none
       - name: Build vinext Workers output (no deploy)
         run: npm run build:vinext
       - name: Report files changed by init
