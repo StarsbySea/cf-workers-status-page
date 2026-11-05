@@ -23,3 +23,13 @@ jobs:
 
       - name: Inspect non-interactive migration options (no changes)
         run: npx --yes vinext@latest init --help
+
+      - name: Initialize vinext on temporary runner (not committed)
+        env:
+          CI: 'true'
+        run: npx --yes vinext@latest init --platform=cloudflare --legacy-wrangler-cloudflare-init --name=uptimeflare-vinext-preview --cdn-cache=none
+      - name: Build vinext Workers output (no deploy)
+        run: npm run build:vinext
+      - name: Report files changed by init
+        if: always()
+        run: git status --short
