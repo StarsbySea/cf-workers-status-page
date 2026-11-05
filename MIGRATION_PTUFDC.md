@@ -26,7 +26,7 @@
 - Durable Objects: RemoteChecker
 
 预备检查中，账户尚无相同名称的 D1 数据库和 Pages 项目。
-以上名称属于**规划**，尚不代表已经创建或部署。
+当前已经通过 Cloudflare 连接创建了独立的测试 Pages 项目 `uptimeflare-preview` 和 D1 `uptimeflare_preview_d1`，且初始化了 `uptimeflare` 表。正式 `uptimeflare` / `uptimeflare_d1` / `uptimeflare_worker` 尚未创建。仅成功创建资源，不表示 Pages 已成功构建部署或监控 Worker 已运行。
 
 ### 发布前条件
 1. 完成 GitHub Actions 构建验证，特别是 Next.js 14 + next-on-pages 兼容性；
