@@ -1,0 +1,26 @@
+name: Validate UptimeFlare migration (no deploy)
+on:
+  push:
+    branches:
+      - migration/uptimeflare-preview
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install UI dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Install Worker dependencies
+        run: npm ci --prefix worker --no-audit --no-fund
+      - name: Build Next.js UI
+        run: npm run build
+      - name: Bundle Worker (no upload)
+        run: cd worker && npx wrangler deploy src/index.ts --outdir dist --dry-run

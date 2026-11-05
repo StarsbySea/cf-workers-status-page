@@ -1,170 +1,90 @@
-# Cloudflare Worker - Status Page
+<div align="right">
+  <a title="English" href="README.md"><img src="https://img.shields.io/badge/-English-A31F34?style=for-the-badge" alt="English" /></a>
+  <a title="简体中文" href="README_zh-CN.md"><img src="https://img.shields.io/badge/-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-545759?style=for-the-badge" alt="简体中文"></a>
+</div>
 
-Monitor your websites, showcase status including daily history, and get Slack notification whenever your website status changes. Using **Cloudflare Workers**, **CRON Triggers,** and **KV storage**. Check [my status page](https://status-page.eidam.dev) out! 🚀
+# ✔[UptimeFlare](https://github.com/lyc8503/UptimeFlare)
 
-![Status Page](.gitbook/assets/status_page_screenshot.png)
+A more advanced, serverless, and free uptime monitoring & status page solution, powered by Cloudflare Workers, complete with a user-friendly interface.
 
-![Slack notifications](.gitbook/assets/slack_screenshot.png)
+📢 **[[SECURITY ADVISORY](https://github.com/lyc8503/UptimeFlare/security/advisories/GHSA-36q9-v7p3-vj6v) 2026/03/04]** A vulnerability (CVE-2026-29779) that could expose monitor configuration and credentials in `uptime.config.ts` to clients was fixed. Versions between 2025-09-21 (from commit `41257c6`) and 2026-03-04 are affected. **Affected users are strongly advised to upgrade to the latest version.**
 
-## Pre-requisites
+🎉 **[UPDATE 2026/01/03]** I have just migrated UptimeFlare from KV to D1 Database. I also updated the Terraform Cloudflare provider to v5 and improved the deployment process. The data structure has been optimized to resolve long-standing performance issues.
 
-You'll need a [Cloudflare Workers account](https://dash.cloudflare.com/sign-up/workers) with
+New users can deploy directly, while existing users can have a simple auto migration process (upgrade docs below)! Feel free to open an issue if you run into any trouble deploying.
 
-- A workers domain set up
-- The Workers Bundled subscription \($5/mo\)
-  - [It works with Workers Free!](https://blog.cloudflare.com/workers-kv-free-tier/) Check [more info](#workers-kv-free-tier) on how to run on Workers Free.
-- Some websites/APIs to watch 🙂
+## ⭐Features
 
-Also, prepare the following secrets
+- Open-source, easy to deploy (in under 10 minutes, no local tools required), and free
+- Monitoring capabilities
+  - Up to 50 checks at 1-minute intervals
+  - Geo-specific checks from over [310 cities](https://www.cloudflare.com/network/) worldwide
+  - Support for HTTP/HTTPS/TCP port monitoring
+  - Up to 90-day uptime history and uptime percentage tracking
+  - Customizable request methods, headers, and body for HTTP(s)
+  - Custom status code & keyword checks for HTTP(s)
+  - Downtime notification supporting [100+ notification channels](https://github.com/caronc/apprise/wiki)
+  - Customizable Webhook
+  - Multi-language support (English/Chinese)
+- Status page
+  - Interactive ping (response time) chart for all types of monitors
+  - Scheduled maintenances alerts & Incident history page
+  - Responsive UI that adapts to your system theme
+  - Customizable status page
+  - Use your own domain with CNAME
+  - Optional password authentication (private status page)
+  - JSON API for fetching realtime status data
 
-- Cloudflare API token with `Edit Cloudflare Workers` permissions
-- Slack incoming webhook \(optional\)
-- Discord incoming webhook \(optional\)
+## 👀Demo
 
-## Getting started
+My status page (Online demo): https://uptimeflare.pages.dev/
 
-You can either deploy with **Cloudflare Deploy Button** using GitHub Actions or deploy on your own.
+Some screenshots:
 
-### Deploy with Cloudflare Deploy Button
+![Desktop, Light theme](docs/desktop.png)
 
-[![Deploy to Cloudflare Workers](https://camo.githubusercontent.com/1f3d0b4d44a2c3f12c78bd02bae907169430e04d728006db9f97a4befa64c886/68747470733a2f2f6465706c6f792e776f726b6572732e636c6f7564666c6172652e636f6d2f627574746f6e3f706169643d74727565)](https://deploy.workers.cloudflare.com/?url=https://github.com/eidam/cf-workers-status-page)
+## ⚡Quickstart / 📄Documentation
 
-1. Click the button and follow the instructions, you should end up with a clone of this repository
-2. Navigate to your new **GitHub repository &gt; Settings &gt; Secrets** and add the following secrets:
+Please refer to [Wiki](https://github.com/lyc8503/UptimeFlare/wiki)
 
-   ```yaml
-   - Name: CF_API_TOKEN (should be added automatically)
+## 🚀Upgrade existing deployments
 
-   - Name: CF_ACCOUNT_ID (should be added automatically)
+Get the latest features right away with [simple upgrade process](https://github.com/lyc8503/UptimeFlare/wiki/Synchronize-updates-from-upstream)
 
-   - Name: SECRET_SLACK_WEBHOOK_URL (optional)
-   - Value: your-slack-webhook-url
+## ⚙️Docs for developer
 
-   - Name: SECRET_DISCORD_WEBHOOK_URL (optional)
-   - Value: your-discord-webhook-url
-   ```
+To contribute new features or customize your deployment furthermore, see [here](https://github.com/lyc8503/UptimeFlare/wiki/How-to-develop).
 
-3. Navigate to the **Actions** settings in your repository and enable them
-4. Edit [config.yaml](./config.yaml) to adjust configuration and list all of your websites/APIs you want to monitor
+## New features (TODOs)
 
-   ```yaml
-   settings:
-     title: 'Status Page'
-     url: 'https://status-page.eidam.dev' # used for Slack & Discord messages
-     logo: logo-192x192.png # image in ./public/ folder
-     daysInHistogram: 90 # number of days you want to display in histogram
-     collectResponseTimes: false # experimental feature, enable only for <5 monitors or on paid plans
-
-     # configurable texts across the status page
-     allmonitorsOperational: 'All Systems Operational'
-     notAllmonitorsOperational: 'Not All Systems Operational'
-     monitorLabelOperational: 'Operational'
-     monitorLabelNotOperational: 'Not Operational'
-     monitorLabelNoData: 'No data'
-     dayInHistogramNoData: 'No data'
-     dayInHistogramOperational: 'All good'
-     dayInHistogramNotOperational: 'Some checks failed'
-
-   # list of monitors
-   monitors:
-     - id: workers-cloudflare-com # unique identifier
-       name: workers.cloudflare.com
-       description: 'You write code. They handle the rest.' # default=empty
-       url: 'https://workers.cloudflare.com/' # URL to fetch
-       method: GET # default=GET
-       expectStatus: 200 # operational status, default=200
-       followRedirect: false # should fetch follow redirects, default=false
-       linkable: false # should the titles be links to the service, default=true
-   ```
-
-5. Push to `main` branch to trigger the deployment
-6. 🎉
-7. _\(optional\)_ Go to [Cloudflare Workers settings](https://dash.cloudflare.com/?to=/workers) and assign custom domain/route
-   - e.g. `status-page.eidam.dev/*` _\(make sure you include `/*` as the Worker also serve static files\)_
-8. _\(optional\)_ Edit [wrangler.toml](./wrangler.toml) to adjust Worker settings or CRON Trigger schedule, especially if you are on [Workers Free plan](#workers-kv-free-tier)
-
-### Telegram notifications
-
-To enable telegram notifications, you'll need to take a few additional steps.
-
-1. [Create a new Bot](https://core.telegram.org/bots#creating-a-new-bot)
-2. Set the api token you received when creating the bot as content of the `SECRET_TELEGRAM_API_TOKEN` secret in your github repository.
-3. Send a message to the bot from the telegram account which should receive the alerts (Something more than `/start`)
-4. Get the chat id with `curl https://api.telegram.org/bot<YOUR TELEGRAM API TOKEN>/getUpdates | jq '.result[0] .message .chat .id'`
-5. Set the retrieved chat id in the `SECRET_TELEGRAM_CHAT_ID` secret variable
-6. Redeploy the status page using the github action
-
-### Deploy on your own
-
-You can clone the repository yourself and use Wrangler CLI to develop/deploy, extra list of things you need to take care of:
-
-- create KV namespace and add the `KV_STATUS_PAGE` binding to [wrangler.toml](./wrangler.toml)
-- create Worker secrets _\(optional\)_
-  - `SECRET_SLACK_WEBHOOK_URL`
-  - `SECRET_DISCORD_WEBHOOK_URL`
-
-## Workers KV free tier
-
-The Workers Free plan includes limited KV usage, but the quota is sufficient for 2-minute checks only
-
-- Change the CRON trigger to 2 minutes interval (`crons = ["*/2 * * * *"]`) in [wrangler.toml](./wrangler.toml)
-
-## Known issues
-
-- **Max 25 monitors to watch in case you are using Slack notifications**, due to the limit of subrequests Cloudflare Worker can make \(50\).
-
-  The plan is to support up to 49 by sending only one Slack notification per scheduled run.
-
-- **KV replication lag** - You might get Slack notification instantly, however it may take couple of more seconds to see the change on your status page as [Cron Triggers are usually running on underutilized quiet hours machines](https://blog.cloudflare.com/introducing-cron-triggers-for-cloudflare-workers/#how-are-you-able-to-offer-this-feature-at-no-additional-cost).
-
-- **Initial delay (no data)** - It takes couple of minutes to schedule and run CRON Triggers for the first time
-
-## Future plans
-
-WIP - Support for Durable Objects - Cloudflare's product for low-latency coordination and consistent storage for the Workers platform. There is a working prototype, however, we are waiting for at least open beta.
-
-There is also a managed version of this project, currently in beta. Feel free to check it out https://statusflare.com (https://twitter.com/statusflare_com).
-
-## Running project locally
-**Requirements**
-- Linux or WSL
-- Yarn (`npm i -g yarn`)
-- Node 14+
-
-### Steps to get server up and running
-**Install wrangler**
-```
-npm i -g wrangler
-```
-
-**Login With Wrangler to Cloudflare**
-```
-wrangler login
-```
-
-**Create your KV namespace in cloudflare**
-```
-On the workers page navigate to KV, and create a namespace
-```
-
-**Update your wrangler.toml with**
-```
-kv-namespaces = [{binding="KV_STATUS_PAGE", id="<KV_ID>", preview_id="<KV_ID>"}]
-```
-_Note: you may need to change `kv-namespaces` to `kv_namespaces`_
-
-**Install packages**
-```
-yarn install
-```
-
-**Create CSS**
-```
-yarn run css
-```
-
-**Run**
-```
-yarn run dev
-```
-_Note: If the styles do not come through try using `localhost:8787` instead of `localhost:8080`_
+- [x] Specify region for monitors
+- [x] TCP `opened` promise
+- [x] Use apprise to support various notification channels
+- [x] ~~Telegram example~~
+- [x] ~~[Bark](https://bark.day.app) example~~
+- [x] ~~Email notification via Cloudflare Email Workers~~
+- [x] Improve docs by providing simple examples
+- [x] Notification grace period
+- [ ] SSL certificate checks
+- [x] ~~Self-host Dockerfile~~
+- [x] Incident history
+- [x] Improve `checkLocationWorkerRoute` and fix possible `proxy failed`
+- [x] Groups
+- [x] Remove old incidents
+- [x] ~~Known issue~~: `fetch` doesn't support non-standard port (resolved after CF update)
+- [x] Compatibility date update
+- [x] Scheduled Maintenance
+- [x] Add docs for dev
+- [x] Migration to Terraform Cloudflare provider version 5.x
+- [x] Cloudflare D1 database
+- [x] Scheduled maintenances (via IIFE)
+- [x] Simpler config example
+- [x] Upcoming maintenances
+- [x] Universal Webhook upgrade
+- [x] i18n...? (maybe)
+- [ ] ICMP via proxy?
+- [x] Add default UA
+- [x] Customizable footer
+- [x] New header logo
+- [x] Improve CPU time usage
+- [x] Local deployment (docs WIP)
