@@ -1,0 +1,22 @@
+name: Investigate vinext compatibility (no deploy)
+on:
+  push:
+    branches:
+      - experiment/uptimeflare-vinext
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compatibility:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install existing UptimeFlare dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Check compatibility with Cloudflare vinext (diagnostic only)
+        run: npx --yes vinext@latest check
